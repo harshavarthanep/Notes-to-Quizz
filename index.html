@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ExamReady Pro v5 | Camera & Smart Quiz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ExamReady Mobile v6</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -12,207 +12,263 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
+            --primary: #4f46e5;
             --bg: #0f172a;
             --card: #1e293b;
             --text: #f8fafc;
-            --text-muted: #94a3b8;
             --border: #334155;
             --success: #10b981;
             --danger: #ef4444;
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.6; }
-        .container { max-width: 1100px; margin: 0 auto; display: flex; gap: 20px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 80px; }
         
-        /* Columns */
-        .main-col { flex: 3; min-width: 0; }
-        .sidebar { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; height: fit-content; min-width: 250px; }
+        /* Mobile Container */
+        .container { padding: 16px; max-width: 800px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h1 { font-size: 1.5rem; margin: 0; color: var(--primary); }
+        p { color: #94a3b8; font-size: 0.9rem; margin: 5px 0 0 0; }
 
-        /* Header */
-        header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
-
-        /* Tabs */
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-        .tab-btn:hover { border-color: var(--primary); color: white; }
+        /* TABS - Horizontal Scroll for Mobile */
+        .tabs { 
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+        }
+        .tabs::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+        
+        .tab-btn { 
+            background: var(--card); border: 1px solid var(--border); color: #94a3b8; 
+            padding: 10px 16px; border-radius: 20px; white-space: nowrap; font-size: 0.9rem; flex-shrink: 0;
+            transition: 0.2s;
+        }
         .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         /* Input Zones */
-        .input-zone { display: none; animation: fadeIn 0.3s ease; }
+        .input-zone { display: none; animation: fadeIn 0.3s; }
         .input-zone.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        textarea { width: 100%; height: 180px; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 15px; resize: vertical; box-sizing: border-box; font-size: 1rem; }
+        textarea { 
+            width: 100%; height: 160px; background: var(--card); color: white; 
+            border: 1px solid var(--border); border-radius: 12px; padding: 15px; font-size: 16px; 
+        }
+
+        /* CAMERA FIXED */
+        .camera-wrapper {
+            position: relative; background: black; border-radius: 12px; overflow: hidden;
+            aspect-ratio: 3/4; /* Better for mobile portrait */
+            margin-bottom: 10px;
+        }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .cam-overlay {
+            position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px;
+        }
+        .cam-btn {
+            background: white; color: black; border: none; width: 50px; height: 50px; border-radius: 50%;
+            font-size: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .cam-btn.snap { background: var(--danger); color: white; border: 4px solid rgba(255,255,255,0.3); width: 60px; height: 60px;}
+
+        /* Loader Overlay (Fixed) */
+        .loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9); z-index: 999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--primary);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Study Area */
+        .workspace { display: none; margin-top: 25px; }
+        .content-box { 
+            background: var(--card); padding: 20px; border-radius: 12px; font-size: 1.1rem; line-height: 1.8; 
+            margin-bottom: 20px; border: 1px solid var(--border);
+        }
         
-        /* Camera UI */
-        .camera-container { position: relative; background: black; border-radius: 8px; overflow: hidden; text-align: center; border: 2px solid var(--border); }
-        video { width: 100%; max-height: 400px; display: block; }
-        .camera-controls { padding: 10px; background: #000; display: flex; justify-content: center; gap: 10px; }
+        .term { border-bottom: 2px solid var(--primary); color: #a5b4fc; font-weight: 600; padding: 0 2px; }
+        .blur-mode .term { background: #475569; color: transparent; border: none; border-radius: 4px; }
+        .blur-mode .term.revealed { background: var(--success); color: white; }
 
-        /* Workspace */
-        .workspace { margin-top: 30px; display: none; }
-        .content-display { background: var(--card); padding: 25px; border-radius: 10px; border: 1px solid var(--border); white-space: pre-wrap; font-size: 1.1rem; line-height: 1.8; }
+        /* Actions Grid */
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-full { grid-column: span 2; background: var(--primary); color: white; padding: 14px; border-radius: 12px; font-weight: bold; border: none; font-size: 1rem; }
+        .btn-sec { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-weight: 600; }
+        .btn-sec:disabled { opacity: 0.5; }
 
-        /* Terms */
-        .term { border-bottom: 2px solid var(--primary); font-weight: 600; cursor: pointer; color: #a5b4fc; transition: 0.2s; padding: 0 2px; }
-        .blur-active .term { background: #475569; color: transparent; border: none; user-select: none; }
-        .blur-active .term:hover { background: var(--success); color: white; cursor: help; }
+        /* Saved Sessions (Bottom Sheet Style) */
+        .saved-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .session-card {
+            background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);
+        }
+        .del-btn { color: var(--danger); padding: 10px; font-size: 1.2rem; }
 
-        /* Controls */
-        .controls { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
-        button { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; background: var(--primary); color: white; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        button.secondary { background: var(--card); border: 1px solid var(--border); }
-        button.danger { background: var(--danger); }
+        /* Quiz UI */
+        .quiz-card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .option { 
+            display: block; width: 100%; padding: 12px; margin-top: 8px; 
+            background: var(--bg); border: 1px solid var(--border); color: white; border-radius: 8px; text-align: left;
+        }
+        .option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.2); }
+        .option.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); }
 
-        /* Quiz */
-        .quiz-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; display: none; }
-        .quiz-card { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .option-btn { display: block; width: 100%; text-align: left; padding: 12px; margin-top: 8px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; transition: 0.2s; }
-        .option-btn:hover { border-color: var(--primary); }
-        .option-btn.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .option-btn.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        /* Toast Notification */
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--success); color: white; padding: 12px 24px; border-radius: 30px;
+            font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            width: max-content;
+        }
+        #toast.show { opacity: 1; bottom: 40px; }
 
-        /* Sidebar & Misc */
-        .session-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .session-item:hover { background: rgba(255, 255, 255, 0.05); }
-        .loader { display: none; color: var(--primary); margin-top: 10px; font-weight: 600; text-align: center; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; }
-
-        /* Responsive */
-        @media (max-width: 800px) { .container { flex-direction: column; } .sidebar { width: 100%; } }
     </style>
 </head>
 <body>
 
+<div id="loaderOverlay" class="loader-overlay">
+    <div class="spinner"></div>
+    <div id="loaderText" style="font-weight: 600;">Processing...</div>
+</div>
+
+<div id="toast">Session Saved! 💾</div>
+
 <div class="container">
-    <div class="main-col">
-        <header>
-            <h1>ExamReady Pro <span style="font-size:0.5em; vertical-align:middle; background:var(--success); padding:2px 6px; border-radius:4px; color:black;">v5</span></h1>
-            <p style="color: var(--text-muted)">Extract text from URLs, PDFs, Images, or Camera.</p>
-        </header>
+    <header>
+        <h1>ExamReady Mobile</h1>
+        <p>Scan, Paste, or Link & Study</p>
+    </header>
 
-        <div class="tabs">
-            <div class="tab-btn active" onclick="switchTab('paste', this)">📝 Text / Paste</div>
-            <div class="tab-btn" onclick="switchTab('upload', this)">📂 Upload File</div>
-            <div class="tab-btn" onclick="switchTab('camera', this)">📷 Camera (OCR)</div>
-            <div class="tab-btn" onclick="switchTab('url', this)">🔗 Website Link</div>
-        </div>
+    <div class="tabs">
+        <div class="tab-btn active" onclick="setTab('paste', this)">📝 Paste</div>
+        <div class="tab-btn" onclick="setTab('camera', this)">📷 Camera</div>
+        <div class="tab-btn" onclick="setTab('upload', this)">📂 File</div>
+        <div class="tab-btn" onclick="setTab('url', this)">🔗 Link</div>
+    </div>
 
-        <div id="paste" class="input-zone active">
-            <textarea id="inputText" placeholder="Paste your study notes here..."></textarea>
-        </div>
+    <div id="paste" class="input-zone active">
+        <textarea id="mainInput" placeholder="Paste text here..."></textarea>
+    </div>
 
-        <div id="upload" class="input-zone">
-            <div style="border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 10px; cursor: pointer; position: relative;" onclick="document.getElementById('fileInput').click()">
-                <input type="file" id="fileInput" accept="image/*, .pdf, .txt" style="display:none">
-                <p style="font-size:1.2rem">Click to Upload PDF or Image</p>
-                <p style="color:var(--text-muted)">Supports .pdf, .png, .jpg, .txt</p>
-            </div>
-        </div>
-
-        <div id="camera" class="input-zone">
-            <div class="camera-container">
-                <video id="videoFeed" autoplay playsinline></video>
-                <canvas id="canvas" style="display:none;"></canvas>
-                <div class="camera-controls">
-                    <button onclick="startCamera()">▶ Start Camera</button>
-                    <button onclick="capturePhoto()" class="danger">◉ Capture & Read</button>
-                </div>
-            </div>
-            <p style="text-align:center; color:var(--text-muted); margin-top:10px;">Ensure good lighting and hold text steady.</p>
-        </div>
-
-        <div id="url" class="input-zone">
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="urlInput" placeholder="https://en.wikipedia.org/wiki/Science" style="flex:1; padding:12px; border-radius:6px; border:1px solid var(--border); background:var(--card); color:white;">
-                <button onclick="fetchUrl()">Fetch</button>
-            </div>
-            <p style="font-size:0.9rem; color:var(--danger); margin-top:10px;">
-                <strong>Note:</strong> Many sites (NYTimes, Medium, etc.) block external tools. If this fails, please copy-paste the text manually.
-            </p>
-        </div>
-
-        <div id="loader" class="loader">⏳ Processing... This is done locally on your device.</div>
-
-        <div class="controls">
-            <button onclick="processText()">⚡ Analyze Text</button>
-            <button class="secondary" onclick="toggleBlur()" id="blurBtn" disabled>👁️ Toggle Recall</button>
-            <button class="secondary" onclick="generateQuiz()" id="quizBtn" disabled>❓ Generate Quiz</button>
-            <button class="secondary" onclick="saveSession()" id="saveBtn" disabled>💾 Save</button>
-        </div>
-
-        <div id="workspace" class="workspace">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                <strong style="color:var(--primary); font-size:1.2rem;">Study Mode</strong>
-                <span id="modeBadge" style="font-size:0.8rem; background:var(--border); padding:4px 10px; border-radius:20px;">Reading</span>
-            </div>
+    <div id="camera" class="input-zone">
+        <div class="camera-wrapper">
+            <video id="videoElement" autoplay playsinline muted></video>
+            <canvas id="hiddenCanvas" style="display:none"></canvas>
             
-            <div id="displayText" class="content-display"></div>
-
-            <div id="quizSection" class="quiz-section">
-                <h2 style="color:var(--primary)">🧠 Smart Quiz</h2>
-                <div id="quizContainer"></div>
+            <div class="cam-overlay">
+                <button class="cam-btn" onclick="initCamera()">⚡</button> 
+                <button class="cam-btn snap" onclick="takePicture()"></button>
             </div>
+        </div>
+        <p style="text-align:center; font-size:0.8rem;">Tap ⚡ to start, then large circle to snap.</p>
+    </div>
+
+    <div id="upload" class="input-zone">
+        <div style="border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 12px;" onclick="document.getElementById('fileIn').click()">
+            <p style="font-size:1.5rem; margin-bottom:5px;">📂</p>
+            <strong>Tap to Upload</strong>
+            <input type="file" id="fileIn" accept="image/*,.pdf,.txt" hidden onchange="handleFile(this.files[0])">
         </div>
     </div>
 
-    <div class="sidebar">
-        <h3>Saved Sessions</h3>
+    <div id="url" class="input-zone">
+        <input type="text" id="urlIn" placeholder="Paste Website URL" style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px;">
+        <button class="btn-full" onclick="handleUrl()">Fetch Content</button>
+    </div>
+
+    <div class="actions">
+        <button class="btn-full" onclick="analyze()">🚀 Create Study Plan</button>
+        <button class="btn-sec" id="blurBtn" onclick="toggleBlur()" disabled>👁️ Recall</button>
+        <button class="btn-sec" id="quizBtn" onclick="startQuiz()" disabled>❓ Quiz</button>
+        <button class="btn-sec" id="saveBtn" style="grid-column: span 2;" onclick="saveSession()" disabled>💾 Save Session</button>
+    </div>
+
+    <div id="workspace" class="workspace">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <strong style="color:var(--primary)">Study View</strong>
+            <span id="modeLabel" style="font-size:0.8rem; background:var(--border); padding:2px 8px; border-radius:4px;">Read</span>
+        </div>
+        <div id="display" class="content-box"></div>
+        <div id="quizArea"></div>
+    </div>
+
+    <div class="saved-section">
+        <h3>📂 Saved Sessions</h3>
         <div id="sessionList"></div>
     </div>
+
 </div>
 
 <script>
-    // --- Global State ---
-    let facts = [];
+    // State
+    let stream = null;
     let isBlurred = false;
-    let videoStream = null;
+    let facts = [];
 
-    // --- Tab Switching ---
-    function switchTab(id, btn) {
-        document.querySelectorAll('.input-zone').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    // --- UI Helpers ---
+    function setTab(id, el) {
+        document.querySelectorAll('.input-zone').forEach(z => z.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(btn) btn.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
         
-        // Stop camera if leaving camera tab
-        if(id !== 'camera' && videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
-        }
+        // Stop camera if leaving tab
+        if (id !== 'camera' && stream) stopCamera();
     }
 
-    // --- 1. Camera Logic ---
-    async function startCamera() {
+    function showLoader(msg) {
+        document.getElementById('loaderText').innerText = msg;
+        document.getElementById('loaderOverlay').style.display = 'flex';
+    }
+
+    function hideLoader() {
+        document.getElementById('loaderOverlay').style.display = 'none';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // --- 1. Camera Logic (Optimized) ---
+    async function initCamera() {
         try {
-            const video = document.getElementById('videoFeed');
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = videoStream;
+            const video = document.getElementById('videoElement');
+            // 'environment' prefers rear camera on mobile
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            video.srcObject = stream;
         } catch (err) {
-            alert("Camera access denied or unavailable: " + err.message);
+            alert("Camera Error: " + err.message);
         }
     }
 
-    async function capturePhoto() {
-        const video = document.getElementById('videoFeed');
-        const canvas = document.getElementById('canvas');
-        if (!videoStream) return alert("Start camera first!");
+    function stopCamera() {
+        if(stream) stream.getTracks().forEach(t => t.stop());
+        stream = null;
+    }
 
-        // Draw video frame to canvas
+    async function takePicture() {
+        if(!stream) return alert("Start camera first");
+        
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('hiddenCanvas');
+        
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-
-        // Stop camera to save battery
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-
-        showLoader("Reading text from photo...");
-
+        
+        stopCamera(); // Stop video to save battery/resources
+        
+        showLoader("Reading Image...");
+        
         try {
             const worker = await Tesseract.createWorker();
             await worker.loadLanguage('eng');
@@ -220,248 +276,202 @@
             const { data } = await worker.recognize(canvas);
             await worker.terminate();
             
-            if(!data.text.trim()) throw new Error("No text found in image.");
-            
-            document.getElementById('inputText').value = data.text;
+            document.getElementById('mainInput').value = data.text;
             hideLoader();
-            switchTab('paste', document.querySelectorAll('.tab-btn')[0]);
-            alert("Text extracted! Click 'Analyze Text' to study.");
-        } catch (err) {
+            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+            showToast("Text Extracted!");
+        } catch(e) {
             hideLoader();
-            alert("OCR Failed: " + err.message);
+            alert("OCR Failed: " + e.message);
         }
     }
 
-    // --- 2. URL Fetching ---
-    async function fetchUrl() {
-        const url = document.getElementById('urlInput').value;
-        if (!url) return alert("Enter a URL");
-        showLoader("Fetching content...");
-
-        try {
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-            const res = await fetch(proxyUrl);
-            const data = await res.json();
-            
-            if (!data.contents) throw new Error("Blocked by website security.");
-
-            const doc = new DOMParser().parseFromString(data.contents, "text/html");
-            // Remove junk
-            ['script', 'style', 'nav', 'footer', 'iframe', 'svg'].forEach(tag => {
-                doc.querySelectorAll(tag).forEach(el => el.remove());
-            });
-
-            const cleanText = doc.body.innerText.replace(/\s+/g, ' ').trim();
-            if(cleanText.length < 50) throw new Error("Couldn't extract main text. Try manual copy-paste.");
-
-            document.getElementById('inputText').value = cleanText;
-            hideLoader();
-            switchTab('paste', document.querySelectorAll('.tab-btn')[0]);
-
-        } catch (err) {
-            hideLoader();
-            alert("Error: " + err.message + "\n\nTip: Use 'Reader Mode' in your browser, then copy-paste the text.");
-        }
-    }
-
-    // --- 3. File Upload (PDF/Image) ---
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
+    // --- 2. File & URL Handlers ---
+    async function handleFile(file) {
         if(!file) return;
-        showLoader("Processing file...");
-        
+        showLoader("Processing File...");
         try {
-            let text = "";
+            let txt = "";
             if(file.type === 'application/pdf') {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 for(let i=1; i<=pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    text += (await page.getTextContent()).items.map(s => s.str).join(" ") + "\n";
+                    txt += (await (await pdf.getPage(i)).getTextContent()).items.map(s=>s.str).join(" ");
                 }
             } else if(file.type.startsWith('image/')) {
-                const worker = await Tesseract.createWorker();
-                await worker.loadLanguage('eng');
-                await worker.initialize('eng');
-                text = (await worker.recognize(file)).data.text;
-                await worker.terminate();
+                const w = await Tesseract.createWorker();
+                await w.loadLanguage('eng');
+                await w.initialize('eng');
+                txt = (await w.recognize(file)).data.text;
+                await w.terminate();
             } else {
-                text = await file.text();
+                txt = await file.text();
             }
-            document.getElementById('inputText').value = text;
+            document.getElementById('mainInput').value = txt;
             hideLoader();
-            switchTab('paste', document.querySelectorAll('.tab-btn')[0]);
-        } catch(err) {
+            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+        } catch(e) { hideLoader(); alert(e.message); }
+    }
+
+    async function handleUrl() {
+        const url = document.getElementById('urlIn').value;
+        if(!url) return;
+        showLoader("Fetching URL...");
+        try {
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            const doc = new DOMParser().parseFromString(data.contents, "text/html");
+            ['script','style','nav','footer'].forEach(t => doc.querySelectorAll(t).forEach(e=>e.remove()));
+            document.getElementById('mainInput').value = doc.body.innerText.replace(/\s+/g,' ').trim();
             hideLoader();
-            alert("File Error: " + err.message);
-        }
-    });
+            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+        } catch(e) { hideLoader(); alert("Could not load URL. Try copying text manually."); }
+    }
 
-    // --- 4. Analysis & Smart Quiz Logic ---
-    function processText() {
-        const rawText = document.getElementById('inputText').value;
-        if(rawText.length < 20) return alert("Text is too short to analyze.");
+    // --- 3. Core Logic ---
+    function analyze() {
+        const txt = document.getElementById('mainInput').value;
+        if(!txt.trim()) return showToast("Please enter text first!");
         
-        const display = document.getElementById('displayText');
-        facts = []; // Reset facts
+        facts = [];
+        const sentences = txt.match(/[^.!?]+[.!?]+/g) || [txt];
+        let html = "";
         
-        // Split into sentences
-        const sentences = rawText.match(/[^.!?]+[.!?]+/g) || [rawText];
-        let htmlBuilder = "";
-
-        // Improved Regex: Matches Years (1000-2999) OR Percentages OR Capitalized Words (Proper Nouns)
-        const regex = /(\b(1[0-9]{3}|20[0-2][0-9])\b|\d+(?:\.\d+)?%|\b[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g;
-
-        sentences.forEach(sentence => {
-            let tempSentence = sentence;
-            
-            // Find matches in this sentence
-            const matches = [...sentence.matchAll(regex)];
-            
-            matches.forEach(m => {
-                const val = m[0];
-                const index = m.index;
-                
-                // Filter basic words
-                if(["The", "This", "That", "It", "He", "She", "They", "But", "And", "In", "On", "Of", "For"].includes(val)) return;
-                
-                // Determine Type for Smart Quiz
-                let type = 'text';
-                if(val.match(/^\d{4}$/)) type = 'year';
-                else if(val.includes('%')) type = 'percent';
-                else if(!isNaN(parseFloat(val))) type = 'number';
-
-                facts.push({ value: val, type: type, sentence: sentence });
+        // Matches Years, Percentages, Capitalized Phrases
+        const regex = /(\b(19|20)\d{2}\b|\d+(?:\.\d+)?%|[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g;
+        
+        sentences.forEach(s => {
+            let safeS = s;
+            safeS = safeS.replace(regex, (m) => {
+                if(["The","It","This","That"].includes(m)) return m;
+                facts.push({ term: m, context: s, type: isNaN(m) ? 'text' : 'num' });
+                return `<span class="term" onclick="reveal(this)">${m}</span>`;
             });
-
-            // Highlight in HTML
-            tempSentence = tempSentence.replace(regex, (match) => {
-                 if(["The", "This", "That", "It", "He", "She", "They"].includes(match)) return match;
-                 return `<span class="term" onclick="reveal(this)">${match}</span>`;
-            });
-            htmlBuilder += tempSentence + " ";
+            html += safeS + " ";
         });
-
-        display.innerHTML = htmlBuilder;
+        
+        document.getElementById('display').innerHTML = html;
         document.getElementById('workspace').style.display = 'block';
-        ['blurBtn', 'quizBtn', 'saveBtn'].forEach(id => document.getElementById(id).disabled = false);
         
-        // Reset Views
-        isBlurred = false;
-        document.getElementById('quizSection').style.display = 'none';
-        updateBadge();
+        // Enable buttons
+        ['blurBtn','quizBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = false);
+        
+        // Scroll to workspace
+        document.getElementById('workspace').scrollIntoView({behavior:'smooth'});
     }
 
-    function generateQuiz() {
-        const container = document.getElementById('quizContainer');
-        const section = document.getElementById('quizSection');
-        container.innerHTML = "";
-        
-        // Deduplicate facts
-        const uniqueFacts = [...new Map(facts.map(f => [f.value, f])).values()];
-        
-        if(uniqueFacts.length < 3) return alert("Not enough facts found. Try more text.");
-
-        // Pick 5 random questions
-        const quizItems = uniqueFacts.sort(() => 0.5 - Math.random()).slice(0, 5);
-
-        quizItems.forEach((item, idx) => {
-            // SMART DISTRACTOR LOGIC
-            // 1. Try to find other facts of the SAME TYPE (e.g. Year vs Year)
-            let distractors = uniqueFacts
-                .filter(f => f.type === item.type && f.value !== item.value)
-                .map(f => f.value);
-            
-            // 2. If not enough same-type distractors, generate FAKE ones for numbers
-            if(distractors.length < 3) {
-                if(item.type === 'year') {
-                    const yr = parseInt(item.value);
-                    distractors.push((yr - 1).toString(), (yr + 2).toString(), (yr - 5).toString());
-                } else if(item.type === 'percent') {
-                    const p = parseFloat(item.value);
-                    distractors.push((p + 10) + "%", (p - 5) + "%", (p / 2) + "%");
-                } else {
-                    // Fallback to other random text facts
-                    distractors.push(...uniqueFacts.filter(f => f.value !== item.value).map(f => f.value));
-                }
-            }
-
-            // 3. Final shuffle and slice
-            distractors = [...new Set(distractors)].sort(() => 0.5 - Math.random()).slice(0, 3);
-            while(distractors.length < 3) distractors.push("None of the above");
-
-            const options = [...distractors, item.value].sort(() => 0.5 - Math.random());
-            const questionText = item.sentence.replace(item.value, "__________");
-
-            const card = document.createElement('div');
-            card.className = 'quiz-card';
-            card.innerHTML = `
-                <p><strong>Q${idx+1}:</strong> ${questionText}</p>
-                <div>
-                    ${options.map(opt => `<button class="option-btn" onclick="checkAnswer(this, '${opt}', '${item.value}')">${opt}</button>`).join('')}
-                </div>
-            `;
-            container.appendChild(card);
-        });
-
-        section.style.display = 'block';
-        section.scrollIntoView({behavior: "smooth"});
-    }
-
-    // --- Helpers ---
-    function checkAnswer(btn, selected, correct) {
-        const btns = btn.parentElement.querySelectorAll('button');
-        btns.forEach(b => b.disabled = true);
-        if(selected === correct) btn.classList.add('correct');
-        else {
-            btn.classList.add('wrong');
-            btns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
-        }
-    }
-
+    // --- 4. Study Modes ---
     function toggleBlur() {
         isBlurred = !isBlurred;
-        const disp = document.getElementById('displayText');
-        if(isBlurred) disp.classList.add('blur-active');
-        else disp.classList.remove('blur-active');
-        updateBadge();
+        const d = document.getElementById('display');
+        d.className = isBlurred ? "content-box blur-mode" : "content-box";
+        document.getElementById('modeLabel').innerText = isBlurred ? "Recall Mode" : "Read Mode";
+        showToast(isBlurred ? "Tap words to reveal" : "Reading Mode Active");
     }
 
-    function reveal(el) { if(isBlurred) { el.style.color = 'white'; el.style.backgroundColor = 'var(--success)'; } }
-    function updateBadge() { document.getElementById('modeBadge').innerText = isBlurred ? "Recall Mode" : "Reading Mode"; }
-    function showLoader(msg) { document.getElementById('loader').style.display='block'; document.getElementById('loader').innerText = "⏳ " + msg; }
-    function hideLoader() { document.getElementById('loader').style.display='none'; }
+    function reveal(el) {
+        if(isBlurred) el.classList.add('revealed');
+    }
 
-    // --- Session Mgmt ---
+    function startQuiz() {
+        const area = document.getElementById('quizArea');
+        area.innerHTML = '<h3 style="margin-top:20px; color:var(--primary)">Quick Quiz</h3>';
+        
+        if(facts.length < 3) return showToast("Not enough facts for quiz");
+        
+        // Simple Quiz Logic
+        const questions = facts.sort(()=>0.5-Math.random()).slice(0, 3);
+        
+        questions.forEach((q, i) => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            
+            // Distractors
+            let opts = facts.map(f=>f.term).filter(t=>t!==q.term)
+                           .sort(()=>0.5-Math.random()).slice(0,3);
+            opts.push(q.term);
+            opts.sort(()=>0.5-Math.random());
+            
+            card.innerHTML = `
+                <p><strong>Q${i+1}:</strong> ${q.context.replace(q.term, '____')}</p>
+                <div>${opts.map(o=>`<button class="option" onclick="check(this,'${o}','${q.term}')">${o}</button>`).join('')}</div>
+            `;
+            area.appendChild(card);
+        });
+        
+        area.scrollIntoView({behavior:'smooth'});
+    }
+
+    function check(btn, sel, corr) {
+        const all = btn.parentElement.children;
+        for(let b of all) b.disabled=true;
+        
+        if(sel === corr) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('wrong');
+            for(let b of all) if(b.innerText===corr) b.classList.add('correct');
+        }
+    }
+
+    // --- 5. Save System (Mobile Fixed) ---
     function saveSession() {
-        const text = document.getElementById('inputText').value;
-        if(!text) return;
-        const sessions = JSON.parse(localStorage.getItem('sessions_v5') || '[]');
-        sessions.unshift({ id: Date.now(), text: text, date: new Date().toLocaleDateString() });
-        localStorage.setItem('sessions_v5', JSON.stringify(sessions));
-        renderSessions();
-        alert("Session Saved!");
+        const txt = document.getElementById('mainInput').value;
+        if(!txt) return;
+
+        try {
+            const sessions = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
+            const newS = { 
+                id: Date.now(), 
+                title: txt.slice(0, 30) + "...", 
+                data: txt, 
+                date: new Date().toLocaleDateString() 
+            };
+            sessions.unshift(newS);
+            localStorage.setItem('ER_Sessions', JSON.stringify(sessions));
+            loadSessions();
+            showToast("Saved to Phone!");
+        } catch(e) {
+            alert("Save failed: Device storage full or disabled.");
+        }
     }
-    
-    function renderSessions() {
+
+    function loadSessions() {
         const list = document.getElementById('sessionList');
-        const sessions = JSON.parse(localStorage.getItem('sessions_v5') || '[]');
-        list.innerHTML = sessions.map(s => `
-            <div class="session-item" onclick="document.getElementById('inputText').value = \`${s.text.replace(/`/g, "\\`")}\`; processText(); switchTab('paste', document.querySelectorAll('.tab-btn')[0]);">
-                <div><strong>Session</strong> <br><small>${s.date}</small></div>
-                <span onclick="event.stopPropagation(); deleteSession(${s.id})" style="color:var(--danger)">×</span>
+        const s = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
+        
+        list.innerHTML = s.map(item => `
+            <div class="session-card" onclick="loadOne(${item.id})">
+                <div>
+                    <strong>${item.title}</strong><br>
+                    <small style="color:#64748b">${item.date}</small>
+                </div>
+                <div class="del-btn" onclick="delOne(event, ${item.id})">×</div>
             </div>
-        `).join('') || "<p style='color:gray; font-size:0.9rem'>No saved sessions.</p>";
-    }
-    
-    function deleteSession(id) {
-        let sessions = JSON.parse(localStorage.getItem('sessions_v5') || '[]');
-        sessions = sessions.filter(s => s.id !== id);
-        localStorage.setItem('sessions_v5', JSON.stringify(sessions));
-        renderSessions();
+        `).join('') || '<p style="text-align:center; color:#64748b">No saved sessions</p>';
     }
 
-    renderSessions();
+    function loadOne(id) {
+        const s = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
+        const found = s.find(x => x.id === id);
+        if(found) {
+            document.getElementById('mainInput').value = found.data;
+            analyze();
+            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+        }
+    }
+
+    function delOne(e, id) {
+        e.stopPropagation();
+        if(!confirm("Delete?")) return;
+        const s = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
+        const left = s.filter(x => x.id !== id);
+        localStorage.setItem('ER_Sessions', JSON.stringify(left));
+        loadSessions();
+    }
+
+    // Init
+    loadSessions();
+
 </script>
-
 </body>
 </html>
