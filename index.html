@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ExamReady Pro v9</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>ExamReady Pro v10 | Aesthetic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -12,155 +12,268 @@
 
     <style>
         :root {
-            --primary: #4f46e5;
-            --bg: #0f172a;
-            --card: #1e293b;
+            /* Modern Gradient Palette */
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent: #ec4899; /* Pink accent */
+            
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7); /* Translucent slate */
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
             --text: #f8fafc;
-            --border: #334155;
+            --text-muted: #94a3b8;
+            
             --success: #10b981;
             --danger: #ef4444;
+            
+            --radius: 16px;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 80px; }
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text); 
+            margin: 0; padding: 0; padding-bottom: 100px; 
+            min-height: 100vh;
+        }
         
         /* Container */
-        .container { padding: 16px; max-width: 900px; margin: 0 auto; }
+        .container { padding: 20px; max-width: 850px; margin: 0 auto; }
         
-        header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-        h1 { font-size: 1.5rem; margin: 0; color: var(--primary); }
-        p { color: #94a3b8; font-size: 0.9rem; margin: 5px 0 0 0; }
+        /* Header */
+        header { 
+            text-align: center; margin-bottom: 30px; padding-top: 20px;
+        }
+        h1 { 
+            font-size: 1.8rem; margin: 0; 
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        p { color: var(--text-muted); font-size: 0.95rem; margin-top: 8px; }
 
-        /* Navigation Tabs */
+        /* Tabs (Floating Pills) */
         .tabs { 
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
+            display: flex; gap: 10px; overflow-x: auto; padding: 5px; margin-bottom: 25px;
+            background: rgba(0,0,0,0.2); border-radius: 50px; border: 1px solid var(--glass-border);
+            width: fit-content; margin-left: auto; margin-right: auto;
             scrollbar-width: none; 
         }
         .tabs::-webkit-scrollbar { display: none; }
         
         .tab-btn { 
-            background: var(--card); border: 1px solid var(--border); color: #94a3b8; 
-            padding: 10px 16px; border-radius: 20px; white-space: nowrap; font-size: 0.9rem; flex-shrink: 0;
-            transition: 0.2s; cursor: pointer;
+            background: transparent; color: var(--text-muted); 
+            padding: 10px 20px; border-radius: 40px; white-space: nowrap; font-size: 0.9rem; font-weight: 600;
+            border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .tab-btn:hover { color: white; }
+        .tab-btn.active { 
+            background: var(--primary); color: white; 
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
 
         /* Input Zones */
-        .input-zone { display: none; animation: fadeIn 0.3s; }
+        .input-zone { display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .input-zone.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         textarea { 
-            width: 100%; height: 160px; background: var(--card); color: white; 
-            border: 1px solid var(--border); border-radius: 12px; padding: 15px; font-size: 16px; 
+            width: 100%; height: 180px; 
+            background: var(--glass-bg); color: white; 
+            border: 1px solid var(--glass-border); border-radius: var(--radius); 
+            padding: 20px; font-size: 1rem; font-family: inherit; line-height: 1.6;
+            transition: 0.3s; backdrop-filter: blur(10px);
         }
+        textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
 
-        /* Camera Wrapper */
+        /* Camera Wrapper (Polished) */
         .camera-wrapper {
-            position: relative; background: black; border-radius: 12px; overflow: hidden;
-            width: 100%; margin-bottom: 10px; border: 2px solid var(--border);
+            position: relative; background: #000; border-radius: var(--radius); overflow: hidden;
+            width: 100%; margin-bottom: 10px; border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
         }
-        /* Mobile Optimization */
+        /* Mobile */
         @media (max-width: 768px) { .camera-wrapper { aspect-ratio: 3/4; } video { width: 100%; height: 100%; object-fit: cover; } }
-        /* Desktop Optimization */
+        /* Desktop */
         @media (min-width: 769px) { .camera-wrapper { aspect-ratio: 16/9; max-height: 500px; } video { width: 100%; height: 100%; object-fit: contain; } }
 
         .cam-overlay {
-            position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10;
+            position: absolute; bottom: 25px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10;
         }
         .cam-btn.snap { 
-            background: var(--danger); border: 4px solid rgba(255,255,255,0.5); 
-            width: 70px; height: 70px; border-radius: 50%; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); cursor: pointer;
+            background: rgba(239, 68, 68, 0.9); border: 4px solid rgba(255,255,255,0.8); 
+            width: 72px; height: 72px; border-radius: 50%; 
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); cursor: pointer; transition: 0.2s;
         }
-
-        /* Loader */
-        .loader-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95); z-index: 999;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid var(--border); border-top: 4px solid var(--primary);
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Study Area */
-        .workspace { display: none; margin-top: 25px; }
-        .content-box { 
-            background: var(--card); padding: 20px; border-radius: 12px; font-size: 1.1rem; line-height: 1.8; 
-            margin-bottom: 20px; border: 1px solid var(--border); transition: 0.3s;
-        }
-        
-        .term { border-bottom: 2px solid var(--primary); color: #a5b4fc; font-weight: 600; padding: 0 2px; cursor: pointer; }
-        
-        /* Blur Logic */
-        .blur-mode .term { background: #475569; color: transparent; border: none; border-radius: 4px; user-select: none; }
-        .blur-mode .term.revealed { background: var(--success); color: white; animation: pop 0.2s ease; }
-        @keyframes pop { 0% { transform: scale(0.9); } 100% { transform: scale(1); } }
+        .cam-btn.snap:active { transform: scale(0.9); }
 
         /* Actions Grid */
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-full { grid-column: span 2; background: var(--primary); color: white; padding: 14px; border-radius: 12px; font-weight: bold; border: none; font-size: 1rem; cursor: pointer;}
-        .btn-sec { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer;}
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        
+        button {
+            border: none; font-family: inherit; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-full { 
+            grid-column: span 2; 
+            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); 
+            color: white; padding: 16px; border-radius: var(--radius); 
+            font-weight: 700; font-size: 1rem; 
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+        .btn-full:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--primary-glow); }
+        .btn-full:active { transform: translateY(0); }
+
+        .btn-sec { 
+            background: var(--glass-bg); border: 1px solid var(--glass-border); 
+            color: var(--text); padding: 14px; border-radius: var(--radius); font-weight: 600; 
+            backdrop-filter: blur(5px);
+        }
+        .btn-sec:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
         .btn-sec:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-active { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+        
+        .btn-active { 
+            background: rgba(16, 185, 129, 0.15) !important; 
+            color: var(--success) !important; 
+            border: 1px solid var(--success) !important; 
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Study Area (Glass Cards) */
+        .workspace { display: none; margin-top: 30px; animation: slideUp 0.5s ease; }
+        .content-box { 
+            background: var(--glass-bg); padding: 24px; border-radius: var(--radius); 
+            font-size: 1.1rem; line-height: 1.8; margin-bottom: 25px; 
+            border: 1px solid var(--glass-border); backdrop-filter: blur(12px);
+            box-shadow: var(--shadow);
+        }
+        
+        .term { 
+            color: #a5b4fc; font-weight: 700; padding: 2px 6px; 
+            border-bottom: 2px solid rgba(99, 102, 241, 0.5); 
+            border-radius: 4px; cursor: pointer; transition: 0.2s;
+        }
+        .term:hover { background: rgba(99, 102, 241, 0.1); }
+        
+        /* Blur Logic */
+        .blur-mode .term { 
+            background: rgba(255,255,255,0.1); color: transparent; 
+            border-bottom-color: transparent; text-shadow: 0 0 8px rgba(255,255,255,0.2);
+            user-select: none;
+        }
+        .blur-mode .term.revealed { 
+            background: rgba(16, 185, 129, 0.2); color: var(--success); 
+            text-shadow: none; animation: pop 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.27);
+        }
+        @keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         /* Quiz UI */
-        .quiz-card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .option { 
-            display: block; width: 100%; padding: 12px; margin-top: 8px; 
-            background: var(--bg); border: 1px solid var(--border); color: white; border-radius: 8px; text-align: left; cursor: pointer;
+        .quiz-card { 
+            background: var(--glass-bg); padding: 24px; border-radius: var(--radius); 
+            margin-bottom: 20px; border: 1px solid var(--glass-border); 
+            animation: slideUp 0.3s ease; backdrop-filter: blur(12px);
         }
-        .option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.2); }
-        .option.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); }
+        .option { 
+            display: block; width: 100%; padding: 14px; margin-top: 10px; 
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); 
+            color: var(--text-muted); border-radius: 12px; text-align: left; 
+            cursor: pointer; transition: 0.2s; font-weight: 500;
+        }
+        .option:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        
+        .option.correct { 
+            border-color: var(--success); background: rgba(16, 185, 129, 0.15); 
+            color: var(--success); font-weight: 700;
+        }
+        .option.wrong { 
+            border-color: var(--danger); background: rgba(239, 68, 68, 0.15); 
+            color: var(--danger); opacity: 0.7;
+        }
         
         .score-board {
-            text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(16, 185, 129, 0.1); 
-            border: 1px solid var(--success); border-radius: 8px; color: var(--success); font-weight: bold; display: none;
+            text-align: center; margin-bottom: 25px; padding: 15px; 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 95, 70, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius); 
+            color: var(--success); font-weight: 700; font-size: 1.1rem;
+            display: none; animation: slideUp 0.3s;
         }
 
         /* Saved Sessions */
-        .saved-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .saved-section { margin-top: 50px; border-top: 1px solid var(--glass-border); padding-top: 30px; }
         .session-card {
-            background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px;
-            display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer;
+            background: var(--glass-bg); padding: 18px; border-radius: var(--radius); 
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; 
+            border: 1px solid transparent; cursor: pointer; transition: 0.2s;
         }
-        .del-btn { color: var(--danger); padding: 10px; font-size: 1.2rem; cursor: pointer;}
+        .session-card:hover { border-color: var(--primary); background: rgba(30, 41, 59, 0.9); transform: scale(1.01); }
+        .del-btn { 
+            color: var(--text-muted); padding: 8px; font-size: 1.2rem; border-radius: 50%; transition: 0.2s; 
+        }
+        .del-btn:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
-        /* Toast */
-        #toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--success); color: white; padding: 12px 24px; border-radius: 30px;
-            font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: max-content;
+        /* Loader & Toast */
+        .loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85); z-index: 999; backdrop-filter: blur(8px);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
         }
-        #toast.show { opacity: 1; bottom: 40px; }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); 
+            border-top: 4px solid var(--primary); border-radius: 50%; 
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--bg-dark); color: white; padding: 12px 24px; border-radius: 50px;
+            font-weight: 600; opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.27); 
+            z-index: 1000; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; align-items: center; gap: 10px;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast::before { content: "✓"; color: var(--success); font-weight: 900; }
+
+        /* Upload Box Style */
+        .upload-box {
+            border: 2px dashed var(--glass-border); padding: 40px; text-align: center; 
+            border-radius: var(--radius); cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.02);
+        }
+        .upload-box:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+
     </style>
 </head>
 <body>
 
 <div id="loaderOverlay" class="loader-overlay">
     <div class="spinner"></div>
-    <div id="loaderText" style="font-weight: 600;">Processing...</div>
+    <div id="loaderText" style="font-weight: 600; color:white; letter-spacing: 0.5px;">Processing...</div>
 </div>
 
-<div id="toast">Session Saved! 💾</div>
+<div id="toast">Session Saved!</div>
 
 <div class="container">
     <header>
         <h1>ExamReady Pro</h1>
-        <p>Scan Notes, Quiz Yourself & Memorize</p>
+        <p>Scan Notes, Quiz Yourself & Memorize Faster.</p>
     </header>
 
     <div class="tabs">
-        <div class="tab-btn active" onclick="setTab('paste', this)">📝 Paste</div>
-        <div class="tab-btn" onclick="setTab('camera', this)">📷 Camera</div>
-        <div class="tab-btn" onclick="setTab('upload', this)">📂 File</div>
-        <div class="tab-btn" onclick="setTab('url', this)">🔗 Link</div>
+        <button class="tab-btn active" onclick="setTab('paste', this)">📝 Paste</button>
+        <button class="tab-btn" onclick="setTab('camera', this)">📷 Camera</button>
+        <button class="tab-btn" onclick="setTab('upload', this)">📂 File</button>
+        <button class="tab-btn" onclick="setTab('url', this)">🔗 Link</button>
     </div>
 
     <div id="paste" class="input-zone active">
-        <textarea id="mainInput" placeholder="Paste study notes here..."></textarea>
+        <textarea id="mainInput" placeholder="Paste your study notes or article here..."></textarea>
     </div>
 
     <div id="camera" class="input-zone">
@@ -171,19 +284,21 @@
                 <button class="cam-btn snap" onclick="takePicture()" title="Take Photo"></button>
             </div>
         </div>
-        <p style="text-align:center; font-size:0.8rem;">Auto-Started. Tap Red Button to Scan.</p>
+        <p style="text-align:center; font-size:0.8rem; opacity: 0.7;">Camera active. Tap red button to scan.</p>
     </div>
 
     <div id="upload" class="input-zone">
-        <div style="border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 12px; cursor: pointer;" onclick="document.getElementById('fileIn').click()">
-            <p style="font-size:2rem; margin-bottom:5px;">📂</p>
-            <strong>Tap to Upload PDF/Image</strong>
+        <div class="upload-box" onclick="document.getElementById('fileIn').click()">
+            <div style="font-size:2.5rem; margin-bottom:10px; opacity:0.8;">📂</div>
+            <strong style="color:white;">Tap to Upload PDF/Image</strong>
+            <p style="font-size:0.85rem; margin-top:5px;">We handle OCR locally.</p>
             <input type="file" id="fileIn" accept="image/*,.pdf,.txt" hidden onchange="handleFile(this.files[0])">
         </div>
     </div>
 
     <div id="url" class="input-zone">
-        <input type="text" id="urlIn" placeholder="Paste Website URL..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px;">
+        <input type="text" id="urlIn" placeholder="Paste Website URL (Wikipedia, Blogs...)" 
+            style="width:100%; padding:18px; border-radius:var(--radius); border:1px solid var(--glass-border); background:var(--glass-bg); color:white; margin-bottom:15px; font-size:1rem;">
         <button class="btn-full" onclick="handleUrl()">Fetch Content</button>
     </div>
 
@@ -195,16 +310,16 @@
     </div>
 
     <div id="workspace" class="workspace">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <strong style="color:var(--primary)">Study View</strong>
-            <span id="modeLabel" style="font-size:0.8rem; background:var(--border); padding:2px 8px; border-radius:4px;">Read Mode</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+            <strong style="color:var(--primary); font-size:1.1rem;">Study View</strong>
+            <span id="modeLabel" style="font-size:0.8rem; background:var(--glass-border); padding:4px 12px; border-radius:20px; color:var(--text-muted);">Read Mode</span>
         </div>
         <div id="display" class="content-box"></div>
         <div id="quizArea"></div>
     </div>
 
     <div class="saved-section">
-        <h3>📂 Saved Sessions</h3>
+        <h3 style="margin-bottom:20px; font-size:1.1rem; opacity:0.8;">📂 Saved Sessions</h3>
         <div id="sessionList"></div>
     </div>
 
@@ -351,14 +466,14 @@
 
     function reveal(el) { if(isBlurred) el.classList.add('revealed'); }
 
-    // --- Quiz System (Score + Retake) ---
+    // --- Quiz System ---
     function startQuiz() {
         const area = document.getElementById('quizArea');
         area.innerHTML = `
-            <h3 style="margin-top:20px; color:var(--primary)">Generated Quiz</h3>
+            <h3 style="margin-top:30px; margin-bottom:20px; color:var(--primary);">Generated Quiz</h3>
             <div id="scoreBoard" class="score-board"></div>
             <div id="quizQuestions"></div>
-            <button id="retakeBtn" class="btn-full" style="display:none; margin-top:20px; background:var(--card); border:1px solid var(--border);" onclick="startQuiz()">🔄 Retake Quiz</button>
+            <button id="retakeBtn" class="btn-full" style="display:none; margin-top:20px; background:var(--glass-bg); border:1px solid var(--glass-border);" onclick="startQuiz()">🔄 Retake Quiz</button>
         `;
         
         if(facts.length < 3) return showToast("Not enough facts.");
@@ -377,7 +492,7 @@
             opts.push(q.term); opts.sort(()=>0.5-Math.random());
             
             card.innerHTML = `
-                <p><strong>Q${i+1}:</strong> ${q.context.replace(q.term, '__________')}</p>
+                <p style="margin-top:0; font-weight:600; color:white;"><strong>Q${i+1}:</strong> ${q.context.replace(q.term, '<span style="color:var(--primary)">__________</span>')}</p>
                 <div>${opts.map(o=>`<button class="option" onclick="check(this,'${o}','${q.term}')">${o}</button>`).join('')}</div>
             `;
             qDiv.appendChild(card);
@@ -405,45 +520,50 @@
             for(let b of all) if(b.innerText===corr) b.classList.add('correct');
         }
 
-        // Check if all answered
+        // Check completion
         const totalAnswered = document.querySelectorAll('.option[disabled]').length;
-        // Since each question has 4 options, we divide by 4 to get questions answered
-        if(totalAnswered / 4 === quizTotal) {
-            showScore();
-        }
+        if(totalAnswered / 4 === quizTotal) showScore();
     }
 
     function showScore() {
         const board = document.getElementById('scoreBoard');
         const percentage = Math.round((quizScore / quizTotal) * 100);
-        let msg = percentage === 100 ? "Perfect! 🎉" : percentage >= 70 ? "Great Job! 👏" : "Keep Practicing! 💪";
+        let msg = percentage === 100 ? "Perfect Score! 🏆" : percentage >= 70 ? "Great Job! 👏" : "Keep Practicing! 💪";
         
-        board.innerHTML = `Result: ${quizScore}/${quizTotal} (${percentage}%) <br> ${msg}`;
+        board.innerHTML = `Score: ${quizScore}/${quizTotal} (${percentage}%) <br> <span style="font-size:0.9rem; font-weight:400; opacity:0.9">${msg}</span>`;
         board.style.display = 'block';
         document.getElementById('retakeBtn').style.display = 'block';
         showToast(`Quiz Complete! Score: ${percentage}%`);
+        board.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
     // --- Helpers & Save ---
     function showLoader(msg) { document.getElementById('loaderText').innerText=msg; document.getElementById('loaderOverlay').style.display='flex'; }
     function hideLoader() { document.getElementById('loaderOverlay').style.display='none'; }
-    function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
+    function showToast(msg) { const t=document.getElementById('toast'); t.childNodes[1].nodeValue = " " + msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
 
     function saveSession() {
         const txt = document.getElementById('mainInput').value; if(!txt) return;
         try {
             const s = JSON.parse(localStorage.getItem('ER_Sessions')||'[]');
             s.unshift({id:Date.now(), title:txt.slice(0,30)+"...", data:txt, date:new Date().toLocaleDateString()});
-            localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); showToast("Saved!");
+            localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); showToast("Saved to Device!");
         } catch(e) { alert("Storage Full"); }
     }
     function loadSessions() {
         const list = document.getElementById('sessionList');
         const s = JSON.parse(localStorage.getItem('ER_Sessions')||'[]');
-        list.innerHTML = s.map(i=>`<div class="session-card" onclick="loadOne(${i.id})"><div><strong>${i.title}</strong><br><small style="color:#64748b">${i.date}</small></div><div class="del-btn" onclick="delOne(event,${i.id})">×</div></div>`).join('') || '<p style="text-align:center;color:#64748b">No saved sessions</p>';
+        list.innerHTML = s.map(i=>`
+            <div class="session-card" onclick="loadOne(${i.id})">
+                <div><strong style="color:white;">${i.title}</strong><br><small style="color:var(--text-muted)">${i.date}</small></div>
+                <div class="del-btn" onclick="delOne(event,${i.id})">✕</div>
+            </div>
+        `).join('') || '<p style="text-align:center;color:var(--text-muted); padding:20px;">No saved sessions yet.</p>';
     }
     function loadOne(id) { const f = JSON.parse(localStorage.getItem('ER_Sessions')||'[]').find(x=>x.id===id); if(f) { document.getElementById('mainInput').value=f.data; analyze(); setTab('paste', document.querySelectorAll('.tab-btn')[0]); } }
-    function delOne(e, id) { e.stopPropagation(); if(confirm("Delete?")) { const s=JSON.parse(localStorage.getItem('ER_Sessions')||'[]').filter(x=>x.id!==id); localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); } }
+    function delOne(e, id) { e.stopPropagation(); if(confirm("Delete this session?")) { const s=JSON.parse(localStorage.getItem('ER_Sessions')||'[]').filter(x=>x.id!==id); localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); } }
+    
+    // Init
     loadSessions();
 
 </script>
