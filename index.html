@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ExamReady Pro v10</title>
+    <title>ExamReady Pro v11</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -135,6 +135,23 @@
             font-weight: 600; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: max-content;
         }
         #toast.show { opacity: 1; bottom: 40px; }
+
+        /* FOOTER ANIMATION */
+        footer {
+            text-align: center; margin-top: 50px; padding: 20px;
+            color: #94a3b8; font-size: 0.9rem; border-top: 1px solid var(--border);
+        }
+        .heart {
+            color: #ef4444; display: inline-block; animation: heartbeat 1.5s infinite;
+        }
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.3); }
+            60% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -208,6 +225,10 @@
         <div id="sessionList"></div>
     </div>
 
+    <footer>
+        Made with <span class="heart">❤️</span> by <strong>Harsha Varthan E P</strong>
+    </footer>
+
 </div>
 
 <script>
@@ -251,9 +272,7 @@
         stopCamera();
         
         showLoader("Scanning Text...");
-        
-        // RESET WORKSPACE ON NEW SCAN
-        resetWorkspace();
+        resetWorkspace(); // Reset on new scan
 
         try {
             const worker = await Tesseract.createWorker();
@@ -272,10 +291,8 @@
     async function handleFile(file) {
         if(!file) return; 
         showLoader("Processing...");
+        resetWorkspace(); // Reset on new file
         
-        // RESET WORKSPACE ON NEW FILE
-        resetWorkspace();
-
         try {
             let txt = "";
             if(file.type === 'application/pdf') {
@@ -292,9 +309,7 @@
     async function handleUrl() {
         const url = document.getElementById('urlIn').value; if(!url) return; 
         showLoader("Fetching...");
-        
-        // RESET WORKSPACE ON NEW URL
-        resetWorkspace();
+        resetWorkspace(); // Reset on new URL
 
         try {
             const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
@@ -314,7 +329,7 @@
         facts = [];
         quizScore = 0;
         ['blurBtn','quizBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = true);
-        deactivateRecallMode(); // Reset UI mode
+        deactivateRecallMode(); 
     }
 
     // --- Core Analysis & Auto-Recall ---
@@ -464,7 +479,6 @@
     function loadOne(id) { 
         const f = JSON.parse(localStorage.getItem('ER_Sessions')||'[]').find(x=>x.id===id); 
         if(f) { 
-            // RESET WORKSPACE ON LOAD
             resetWorkspace();
             document.getElementById('mainInput').value=f.data; 
             analyze(); 
