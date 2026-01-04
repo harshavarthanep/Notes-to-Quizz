@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ExamReady Pro v8</title>
+    <title>ExamReady Pro v9</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -55,40 +55,25 @@
             border: 1px solid var(--border); border-radius: 12px; padding: 15px; font-size: 16px; 
         }
 
-        /* --- HYBRID CAMERA UI --- */
+        /* Camera Wrapper */
         .camera-wrapper {
             position: relative; background: black; border-radius: 12px; overflow: hidden;
             width: 100%; margin-bottom: 10px; border: 2px solid var(--border);
         }
-
-        /* Mobile Optimization (Portrait) */
-        @media (max-width: 768px) {
-            .camera-wrapper { aspect-ratio: 3/4; } 
-            video { width: 100%; height: 100%; object-fit: cover; }
-        }
-
-        /* Desktop Optimization (Landscape) */
-        @media (min-width: 769px) {
-            .camera-wrapper { aspect-ratio: 16/9; max-height: 500px; }
-            video { width: 100%; height: 100%; object-fit: contain; }
-        }
+        /* Mobile Optimization */
+        @media (max-width: 768px) { .camera-wrapper { aspect-ratio: 3/4; } video { width: 100%; height: 100%; object-fit: cover; } }
+        /* Desktop Optimization */
+        @media (min-width: 769px) { .camera-wrapper { aspect-ratio: 16/9; max-height: 500px; } video { width: 100%; height: 100%; object-fit: contain; } }
 
         .cam-overlay {
             position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10;
         }
-        .cam-btn {
-            background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); 
-            width: 50px; height: 50px; border-radius: 50%; font-size: 20px; 
-            display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-            cursor: pointer;
-        }
         .cam-btn.snap { 
             background: var(--danger); border: 4px solid rgba(255,255,255,0.5); 
-            width: 70px; height: 70px; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            width: 70px; height: 70px; border-radius: 50%; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); cursor: pointer;
         }
-        .cam-btn:hover { transform: scale(1.05); }
 
-        /* Loader Overlay */
+        /* Loader */
         .loader-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.95); z-index: 999;
@@ -129,6 +114,11 @@
         }
         .option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.2); }
         .option.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.2); }
+        
+        .score-board {
+            text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(16, 185, 129, 0.1); 
+            border: 1px solid var(--success); border-radius: 8px; color: var(--success); font-weight: bold; display: none;
+        }
 
         /* Saved Sessions */
         .saved-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
@@ -177,24 +167,23 @@
         <div class="camera-wrapper">
             <video id="videoElement" autoplay playsinline muted></video>
             <canvas id="hiddenCanvas" style="display:none"></canvas>
-            
             <div class="cam-overlay">
                 <button class="cam-btn snap" onclick="takePicture()" title="Take Photo"></button>
             </div>
         </div>
-        <p style="text-align:center; font-size:0.8rem;">Camera starts automatically. Tap red button to scan.</p>
+        <p style="text-align:center; font-size:0.8rem;">Auto-Started. Tap Red Button to Scan.</p>
     </div>
 
     <div id="upload" class="input-zone">
         <div style="border: 2px dashed var(--border); padding: 40px; text-align: center; border-radius: 12px; cursor: pointer;" onclick="document.getElementById('fileIn').click()">
             <p style="font-size:2rem; margin-bottom:5px;">📂</p>
-            <strong>Tap to Upload PDF or Image</strong>
+            <strong>Tap to Upload PDF/Image</strong>
             <input type="file" id="fileIn" accept="image/*,.pdf,.txt" hidden onchange="handleFile(this.files[0])">
         </div>
     </div>
 
     <div id="url" class="input-zone">
-        <input type="text" id="urlIn" placeholder="Paste Website URL (Wikipedia, Blogs...)" style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px;">
+        <input type="text" id="urlIn" placeholder="Paste Website URL..." style="width:100%; padding:14px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:white; margin-bottom:10px;">
         <button class="btn-full" onclick="handleUrl()">Fetch Content</button>
     </div>
 
@@ -226,140 +215,97 @@
     let stream = null;
     let isBlurred = false;
     let facts = [];
+    let quizScore = 0;
+    let quizTotal = 0;
 
-    // --- Tab & Camera Logic (Auto-Start) ---
+    // --- Tab & Camera Logic ---
     function setTab(id, el) {
         document.querySelectorAll('.input-zone').forEach(z => z.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        
-        if (id === 'camera') {
-            initCamera(); // Auto-start
-        } else {
-            stopCamera(); // Stop if leaving tab
-        }
+        if (id === 'camera') initCamera(); else stopCamera();
     }
 
     async function initCamera() {
-        if(stream) return; // Already running
+        if(stream) return;
         try {
             const video = document.getElementById('videoElement');
-            // 'environment' uses rear camera on phones
             stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
             });
             video.srcObject = stream;
-        } catch (err) {
-            alert("Camera Access Error: " + err.message + "\nPlease allow camera permissions.");
-        }
+        } catch (err) { alert("Camera Error: " + err.message); }
     }
 
     function stopCamera() {
-        if(stream) {
-            stream.getTracks().forEach(t => t.stop());
-            stream = null;
-        }
+        if(stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     }
 
     async function takePicture() {
-        if(!stream) return alert("Camera is starting... wait a moment.");
-        
+        if(!stream) return;
         const video = document.getElementById('videoElement');
         const canvas = document.getElementById('hiddenCanvas');
-        
-        // Capture resolution
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
+        stopCamera();
         
-        stopCamera(); // Stop immediately to save battery
-        
-        showLoader("Scanning Text (OCR)...");
+        showLoader("Scanning Text...");
         try {
             const worker = await Tesseract.createWorker();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
+            await worker.loadLanguage('eng'); await worker.initialize('eng');
             const { data } = await worker.recognize(canvas);
             await worker.terminate();
-            
-            if(!data.text.trim()) throw new Error("No text found. Try closer.");
-            
+            if(!data.text.trim()) throw new Error("No text found.");
             document.getElementById('mainInput').value = data.text;
             hideLoader();
-            
-            // Switch back to paste tab
-            const pasteTabBtn = document.querySelectorAll('.tab-btn')[0];
-            setTab('paste', pasteTabBtn);
-            
-            showToast("Text Extracted Successfully!");
-        } catch(e) {
-            hideLoader();
-            alert("Scan Failed: " + e.message);
-        }
+            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+            showToast("Text Scanned!");
+        } catch(e) { hideLoader(); alert("OCR Error: " + e.message); }
     }
 
-    // --- File & URL Handlers ---
+    // --- File/URL Handlers ---
     async function handleFile(file) {
-        if(!file) return;
-        showLoader("Processing File...");
+        if(!file) return; showLoader("Processing...");
         try {
             let txt = "";
             if(file.type === 'application/pdf') {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                for(let i=1; i<=pdf.numPages; i++) {
-                    txt += (await (await pdf.getPage(i)).getTextContent()).items.map(s=>s.str).join(" ");
-                }
+                for(let i=1; i<=pdf.numPages; i++) txt += (await (await pdf.getPage(i)).getTextContent()).items.map(s=>s.str).join(" ");
             } else if(file.type.startsWith('image/')) {
-                const w = await Tesseract.createWorker();
-                await w.loadLanguage('eng');
-                await w.initialize('eng');
-                txt = (await w.recognize(file)).data.text;
-                await w.terminate();
-            } else {
-                txt = await file.text();
-            }
-            document.getElementById('mainInput').value = txt;
-            hideLoader();
-            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+                const w = await Tesseract.createWorker(); await w.loadLanguage('eng'); await w.initialize('eng');
+                txt = (await w.recognize(file)).data.text; await w.terminate();
+            } else txt = await file.text();
+            document.getElementById('mainInput').value = txt; hideLoader(); setTab('paste', document.querySelectorAll('.tab-btn')[0]);
         } catch(e) { hideLoader(); alert(e.message); }
     }
 
     async function handleUrl() {
-        const url = document.getElementById('urlIn').value;
-        if(!url) return;
-        showLoader("Fetching URL...");
+        const url = document.getElementById('urlIn').value; if(!url) return; showLoader("Fetching...");
         try {
             const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
             const data = await res.json();
             const doc = new DOMParser().parseFromString(data.contents, "text/html");
             ['script','style','nav','footer'].forEach(t => doc.querySelectorAll(t).forEach(e=>e.remove()));
             document.getElementById('mainInput').value = doc.body.innerText.replace(/\s+/g,' ').trim();
-            hideLoader();
-            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
-        } catch(e) { hideLoader(); alert("Could not load URL. Try copying text manually."); }
+            hideLoader(); setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+        } catch(e) { hideLoader(); alert("Fetch Failed."); }
     }
 
-    // --- Analysis Logic ---
+    // --- Core Analysis & Auto-Recall ---
     function analyze() {
         const txt = document.getElementById('mainInput').value;
-        if(!txt.trim()) return showToast("Please enter text first!");
+        if(!txt.trim()) return showToast("Enter text first!");
         
         facts = [];
         const sentences = txt.match(/[^.!?]+[.!?]+/g) || [txt];
         let html = "";
-        
-        // Regex: Years, Percentages, Capitalized Words
         const regex = /(\b(19|20)\d{2}\b|\d+(?:\.\d+)?%|[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g;
         
         sentences.forEach(s => {
-            let safeS = s;
-            safeS = safeS.replace(regex, (m) => {
-                // Ignore common words
-                if(["The","It","This","That","When","Then","In","On"].includes(m)) return m;
-                if(m.length < 3) return m;
-                
-                facts.push({ term: m, context: s, type: isNaN(m) ? 'text' : 'num' });
+            let safeS = s.replace(regex, (m) => {
+                if(["The","It","This","That","In","On"].includes(m) || m.length < 3) return m;
+                facts.push({ term: m, context: s });
                 return `<span class="term" onclick="reveal(this)">${m}</span>`;
             });
             html += safeS + " ";
@@ -367,140 +313,137 @@
         
         document.getElementById('display').innerHTML = html;
         document.getElementById('workspace').style.display = 'block';
-        
         ['blurBtn','quizBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = false);
         
-        // Reset modes
-        isBlurred = false;
-        resetBlurUI();
+        // AUTO-ACTIVATE RECALL MODE
+        activateRecallMode(); 
+        
         document.getElementById('workspace').scrollIntoView({behavior:'smooth'});
     }
 
     // --- Study Modes ---
     function toggleBlur() {
         isBlurred = !isBlurred;
-        const btn = document.getElementById('blurBtn');
-        const display = document.getElementById('display');
-        const label = document.getElementById('modeLabel');
-
-        if (isBlurred) {
-            display.classList.add('blur-mode');
-            btn.innerText = "📖 Back to Reading";
-            btn.classList.add('btn-active');
-            label.innerText = "Recall Mode";
-            document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
-            showToast("Recall Active: Tap to Reveal");
-        } else {
-            resetBlurUI();
-            showToast("Read Mode Active");
-        }
+        if(isBlurred) activateRecallMode();
+        else deactivateRecallMode();
     }
-    
-    function resetBlurUI() {
-        const display = document.getElementById('display');
+
+    function activateRecallMode() {
+        isBlurred = true;
+        document.getElementById('display').classList.add('blur-mode');
         const btn = document.getElementById('blurBtn');
-        const label = document.getElementById('modeLabel');
-        display.classList.remove('blur-mode');
+        btn.innerText = "📖 Back to Reading";
+        btn.classList.add('btn-active');
+        document.getElementById('modeLabel').innerText = "Recall Mode";
+        document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+        showToast("Recall Active: Tap to Reveal");
+    }
+
+    function deactivateRecallMode() {
+        isBlurred = false;
+        document.getElementById('display').classList.remove('blur-mode');
+        const btn = document.getElementById('blurBtn');
         btn.innerText = "👁️ Start Recall";
         btn.classList.remove('btn-active');
-        label.innerText = "Read Mode";
+        document.getElementById('modeLabel').innerText = "Read Mode";
+        showToast("Read Mode Active");
     }
 
     function reveal(el) { if(isBlurred) el.classList.add('revealed'); }
 
-    // --- UPDATED Quiz Logic (More Questions) ---
+    // --- Quiz System (Score + Retake) ---
     function startQuiz() {
         const area = document.getElementById('quizArea');
-        area.innerHTML = '<h3 style="margin-top:20px; color:var(--primary)">Generated Quiz</h3>';
+        area.innerHTML = `
+            <h3 style="margin-top:20px; color:var(--primary)">Generated Quiz</h3>
+            <div id="scoreBoard" class="score-board"></div>
+            <div id="quizQuestions"></div>
+            <button id="retakeBtn" class="btn-full" style="display:none; margin-top:20px; background:var(--card); border:1px solid var(--border);" onclick="startQuiz()">🔄 Retake Quiz</button>
+        `;
         
-        if(facts.length < 3) return showToast("Not enough facts for quiz");
+        if(facts.length < 3) return showToast("Not enough facts.");
         
-        // Dynamic Question Count: Up to 10 questions, or all facts if less than 10
-        const questionCount = Math.min(facts.length, 10);
+        quizScore = 0;
+        const qCount = Math.min(facts.length, 10);
+        quizTotal = qCount;
         
-        // Shuffle and take 'questionCount' items
-        const questions = facts.sort(()=>0.5-Math.random()).slice(0, questionCount);
-        
+        const questions = facts.sort(()=>0.5-Math.random()).slice(0, qCount);
+        const qDiv = document.getElementById('quizQuestions');
+
         questions.forEach((q, i) => {
             const card = document.createElement('div');
             card.className = 'quiz-card';
-            
-            // Distractors
-            let opts = facts.map(f=>f.term).filter(t=>t!==q.term)
-                           .sort(()=>0.5-Math.random()).slice(0,3);
-            opts.push(q.term);
-            opts.sort(()=>0.5-Math.random());
+            let opts = facts.map(f=>f.term).filter(t=>t!==q.term).sort(()=>0.5-Math.random()).slice(0,3);
+            opts.push(q.term); opts.sort(()=>0.5-Math.random());
             
             card.innerHTML = `
                 <p><strong>Q${i+1}:</strong> ${q.context.replace(q.term, '__________')}</p>
                 <div>${opts.map(o=>`<button class="option" onclick="check(this,'${o}','${q.term}')">${o}</button>`).join('')}</div>
             `;
-            area.appendChild(card);
+            qDiv.appendChild(card);
         });
         
         area.scrollIntoView({behavior:'smooth'});
     }
 
     function check(btn, sel, corr) {
-        const all = btn.parentElement.children;
+        const parent = btn.parentElement;
+        const all = parent.children;
+        // Check if already answered
+        let answered = false;
+        for(let b of all) if(b.disabled) answered = true;
+        if(answered) return;
+
+        // Mark buttons
         for(let b of all) b.disabled=true;
-        if(sel === corr) btn.classList.add('correct');
-        else {
+        
+        if(sel === corr) {
+            btn.classList.add('correct');
+            quizScore++;
+        } else {
             btn.classList.add('wrong');
             for(let b of all) if(b.innerText===corr) b.classList.add('correct');
         }
-    }
 
-    // --- Helpers ---
-    function showLoader(msg) {
-        document.getElementById('loaderText').innerText = msg;
-        document.getElementById('loaderOverlay').style.display = 'flex';
-    }
-    function hideLoader() { document.getElementById('loaderOverlay').style.display = 'none'; }
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 3000);
-    }
-
-    // --- Save System ---
-    function saveSession() {
-        const txt = document.getElementById('mainInput').value;
-        if(!txt) return;
-        try {
-            const s = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
-            s.unshift({ id: Date.now(), title: txt.slice(0, 30)+"...", data: txt, date: new Date().toLocaleDateString() });
-            localStorage.setItem('ER_Sessions', JSON.stringify(s));
-            loadSessions();
-            showToast("Saved to Device!");
-        } catch(e) { alert("Save failed: Storage full."); }
-    }
-
-    function loadSessions() {
-        const list = document.getElementById('sessionList');
-        const s = JSON.parse(localStorage.getItem('ER_Sessions') || '[]');
-        list.innerHTML = s.map(item => `
-            <div class="session-card" onclick="loadOne(${item.id})">
-                <div><strong>${item.title}</strong><br><small style="color:#64748b">${item.date}</small></div>
-                <div class="del-btn" onclick="delOne(event, ${item.id})">×</div>
-            </div>
-        `).join('') || '<p style="text-align:center; color:#64748b">No saved sessions</p>';
-    }
-
-    function loadOne(id) {
-        const found = JSON.parse(localStorage.getItem('ER_Sessions')||'[]').find(x => x.id === id);
-        if(found) {
-            document.getElementById('mainInput').value = found.data;
-            analyze();
-            setTab('paste', document.querySelectorAll('.tab-btn')[0]);
+        // Check if all answered
+        const totalAnswered = document.querySelectorAll('.option[disabled]').length;
+        // Since each question has 4 options, we divide by 4 to get questions answered
+        if(totalAnswered / 4 === quizTotal) {
+            showScore();
         }
     }
-    function delOne(e, id) {
-        e.stopPropagation(); if(!confirm("Delete?")) return;
-        const s = JSON.parse(localStorage.getItem('ER_Sessions')||'[]').filter(x => x.id !== id);
-        localStorage.setItem('ER_Sessions', JSON.stringify(s));
-        loadSessions();
+
+    function showScore() {
+        const board = document.getElementById('scoreBoard');
+        const percentage = Math.round((quizScore / quizTotal) * 100);
+        let msg = percentage === 100 ? "Perfect! 🎉" : percentage >= 70 ? "Great Job! 👏" : "Keep Practicing! 💪";
+        
+        board.innerHTML = `Result: ${quizScore}/${quizTotal} (${percentage}%) <br> ${msg}`;
+        board.style.display = 'block';
+        document.getElementById('retakeBtn').style.display = 'block';
+        showToast(`Quiz Complete! Score: ${percentage}%`);
     }
+
+    // --- Helpers & Save ---
+    function showLoader(msg) { document.getElementById('loaderText').innerText=msg; document.getElementById('loaderOverlay').style.display='flex'; }
+    function hideLoader() { document.getElementById('loaderOverlay').style.display='none'; }
+    function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
+
+    function saveSession() {
+        const txt = document.getElementById('mainInput').value; if(!txt) return;
+        try {
+            const s = JSON.parse(localStorage.getItem('ER_Sessions')||'[]');
+            s.unshift({id:Date.now(), title:txt.slice(0,30)+"...", data:txt, date:new Date().toLocaleDateString()});
+            localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); showToast("Saved!");
+        } catch(e) { alert("Storage Full"); }
+    }
+    function loadSessions() {
+        const list = document.getElementById('sessionList');
+        const s = JSON.parse(localStorage.getItem('ER_Sessions')||'[]');
+        list.innerHTML = s.map(i=>`<div class="session-card" onclick="loadOne(${i.id})"><div><strong>${i.title}</strong><br><small style="color:#64748b">${i.date}</small></div><div class="del-btn" onclick="delOne(event,${i.id})">×</div></div>`).join('') || '<p style="text-align:center;color:#64748b">No saved sessions</p>';
+    }
+    function loadOne(id) { const f = JSON.parse(localStorage.getItem('ER_Sessions')||'[]').find(x=>x.id===id); if(f) { document.getElementById('mainInput').value=f.data; analyze(); setTab('paste', document.querySelectorAll('.tab-btn')[0]); } }
+    function delOne(e, id) { e.stopPropagation(); if(confirm("Delete?")) { const s=JSON.parse(localStorage.getItem('ER_Sessions')||'[]').filter(x=>x.id!==id); localStorage.setItem('ER_Sessions', JSON.stringify(s)); loadSessions(); } }
     loadSessions();
 
 </script>
