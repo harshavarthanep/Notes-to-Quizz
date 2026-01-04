@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ExamReady Mobile v6</title>
+    <title>ExamReady Mobile v7</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -34,9 +34,9 @@
         /* TABS - Horizontal Scroll for Mobile */
         .tabs { 
             display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
-            scrollbar-width: none; /* Hide scrollbar Firefox */
+            scrollbar-width: none; 
         }
-        .tabs::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+        .tabs::-webkit-scrollbar { display: none; }
         
         .tab-btn { 
             background: var(--card); border: 1px solid var(--border); color: #94a3b8; 
@@ -71,10 +71,10 @@
         }
         .cam-btn.snap { background: var(--danger); color: white; border: 4px solid rgba(255,255,255,0.3); width: 60px; height: 60px;}
 
-        /* Loader Overlay (Fixed) */
+        /* Loader Overlay */
         .loader-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.9); z-index: 999;
+            background: rgba(15, 23, 42, 0.95); z-index: 999;
             display: none; flex-direction: column; align-items: center; justify-content: center;
         }
         .spinner {
@@ -87,20 +87,26 @@
         .workspace { display: none; margin-top: 25px; }
         .content-box { 
             background: var(--card); padding: 20px; border-radius: 12px; font-size: 1.1rem; line-height: 1.8; 
-            margin-bottom: 20px; border: 1px solid var(--border);
+            margin-bottom: 20px; border: 1px solid var(--border); transition: 0.3s;
         }
         
-        .term { border-bottom: 2px solid var(--primary); color: #a5b4fc; font-weight: 600; padding: 0 2px; }
-        .blur-mode .term { background: #475569; color: transparent; border: none; border-radius: 4px; }
-        .blur-mode .term.revealed { background: var(--success); color: white; }
+        .term { border-bottom: 2px solid var(--primary); color: #a5b4fc; font-weight: 600; padding: 0 2px; cursor: pointer; }
+        
+        /* Blur Logic */
+        .blur-mode .term { background: #475569; color: transparent; border: none; border-radius: 4px; user-select: none; }
+        .blur-mode .term.revealed { background: var(--success); color: white; animation: pop 0.2s ease; }
+        @keyframes pop { 0% { transform: scale(0.9); } 100% { transform: scale(1); } }
 
         /* Actions Grid */
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .btn-full { grid-column: span 2; background: var(--primary); color: white; padding: 14px; border-radius: 12px; font-weight: bold; border: none; font-size: 1rem; }
         .btn-sec { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-weight: 600; }
         .btn-sec:disabled { opacity: 0.5; }
+        
+        /* Active State for Recall Button */
+        .btn-active { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
 
-        /* Saved Sessions (Bottom Sheet Style) */
+        /* Saved Sessions */
         .saved-section { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; }
         .session-card {
             background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px;
@@ -182,7 +188,7 @@
 
     <div class="actions">
         <button class="btn-full" onclick="analyze()">🚀 Create Study Plan</button>
-        <button class="btn-sec" id="blurBtn" onclick="toggleBlur()" disabled>👁️ Recall</button>
+        <button class="btn-sec" id="blurBtn" onclick="toggleBlur()" disabled>👁️ Start Recall</button>
         <button class="btn-sec" id="quizBtn" onclick="startQuiz()" disabled>❓ Quiz</button>
         <button class="btn-sec" id="saveBtn" style="grid-column: span 2;" onclick="saveSession()" disabled>💾 Save Session</button>
     </div>
@@ -190,7 +196,7 @@
     <div id="workspace" class="workspace">
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
             <strong style="color:var(--primary)">Study View</strong>
-            <span id="modeLabel" style="font-size:0.8rem; background:var(--border); padding:2px 8px; border-radius:4px;">Read</span>
+            <span id="modeLabel" style="font-size:0.8rem; background:var(--border); padding:2px 8px; border-radius:4px;">Read Mode</span>
         </div>
         <div id="display" class="content-box"></div>
         <div id="quizArea"></div>
@@ -215,8 +221,6 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        
-        // Stop camera if leaving tab
         if (id !== 'camera' && stream) stopCamera();
     }
 
@@ -236,11 +240,10 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // --- 1. Camera Logic (Optimized) ---
+    // --- 1. Camera Logic ---
     async function initCamera() {
         try {
             const video = document.getElementById('videoElement');
-            // 'environment' prefers rear camera on mobile
             stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
@@ -264,11 +267,9 @@
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        stopCamera(); // Stop video to save battery/resources
+        stopCamera();
         
         showLoader("Reading Image...");
-        
         try {
             const worker = await Tesseract.createWorker();
             await worker.loadLanguage('eng');
@@ -336,13 +337,12 @@
         const sentences = txt.match(/[^.!?]+[.!?]+/g) || [txt];
         let html = "";
         
-        // Matches Years, Percentages, Capitalized Phrases
         const regex = /(\b(19|20)\d{2}\b|\d+(?:\.\d+)?%|[A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/g;
         
         sentences.forEach(s => {
             let safeS = s;
             safeS = safeS.replace(regex, (m) => {
-                if(["The","It","This","That"].includes(m)) return m;
+                if(["The","It","This","That","When"].includes(m)) return m;
                 facts.push({ term: m, context: s, type: isNaN(m) ? 'text' : 'num' });
                 return `<span class="term" onclick="reveal(this)">${m}</span>`;
             });
@@ -352,20 +352,49 @@
         document.getElementById('display').innerHTML = html;
         document.getElementById('workspace').style.display = 'block';
         
-        // Enable buttons
         ['blurBtn','quizBtn','saveBtn'].forEach(id => document.getElementById(id).disabled = false);
         
-        // Scroll to workspace
+        // Reset state on new analysis
+        isBlurred = false;
+        resetBlurUI();
         document.getElementById('workspace').scrollIntoView({behavior:'smooth'});
     }
 
-    // --- 4. Study Modes ---
+    // --- 4. IMPROVED STUDY MODES ---
     function toggleBlur() {
         isBlurred = !isBlurred;
-        const d = document.getElementById('display');
-        d.className = isBlurred ? "content-box blur-mode" : "content-box";
-        document.getElementById('modeLabel').innerText = isBlurred ? "Recall Mode" : "Read Mode";
-        showToast(isBlurred ? "Tap words to reveal" : "Reading Mode Active");
+        const btn = document.getElementById('blurBtn');
+        const display = document.getElementById('display');
+        const label = document.getElementById('modeLabel');
+
+        if (isBlurred) {
+            // Enter Recall Mode
+            display.classList.add('blur-mode');
+            btn.innerText = "📖 Back to Reading";
+            btn.classList.add('btn-active');
+            label.innerText = "Recall Mode";
+            
+            // RESET LOGIC: Hide all words again
+            document.querySelectorAll('.term').forEach(t => t.classList.remove('revealed'));
+            
+            showToast("Recall Active: Tap to Reveal");
+        } else {
+            // Exit to Read Mode
+            resetBlurUI();
+            showToast("Read Mode Active");
+        }
+    }
+    
+    function resetBlurUI() {
+        // Helper to reset UI to "Read" state
+        const display = document.getElementById('display');
+        const btn = document.getElementById('blurBtn');
+        const label = document.getElementById('modeLabel');
+        
+        display.classList.remove('blur-mode');
+        btn.innerText = "👁️ Start Recall";
+        btn.classList.remove('btn-active');
+        label.innerText = "Read Mode";
     }
 
     function reveal(el) {
@@ -378,14 +407,12 @@
         
         if(facts.length < 3) return showToast("Not enough facts for quiz");
         
-        // Simple Quiz Logic
         const questions = facts.sort(()=>0.5-Math.random()).slice(0, 3);
         
         questions.forEach((q, i) => {
             const card = document.createElement('div');
             card.className = 'quiz-card';
             
-            // Distractors
             let opts = facts.map(f=>f.term).filter(t=>t!==q.term)
                            .sort(()=>0.5-Math.random()).slice(0,3);
             opts.push(q.term);
@@ -413,7 +440,7 @@
         }
     }
 
-    // --- 5. Save System (Mobile Fixed) ---
+    // --- 5. Save System ---
     function saveSession() {
         const txt = document.getElementById('mainInput').value;
         if(!txt) return;
